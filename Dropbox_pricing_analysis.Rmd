@@ -5,5 +5,29 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+dropbox <- read_csv("Pricing Project - Dropbox (Responses) - Form Responses 1.csv")
+
+dropbox$id <- seq(1, nrow(dropbox),1)
+```
+
+```{r}
+dropbox <- dropbox %>%
+  mutate(tool = ifelse(`Do you use Dropbox as your main cloud storage?` == 'Yes', "Dropbox", `What cloud storage product do you use mostly?`)) %>%
+  mutate(tool = ifelse(tool == "I don't use any cloud storage product/ I only use whatever space my compute have.", "computer", tool)) 
+
+dropbox%>%
+  group_by(tool) %>%
+  tally() %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = reorder(tool, n), y = n)) + geom_col() + coord_flip() +
+  labs(x = "tools", y = "count")
+```
+
+```{r}
+colnames(dropbox)
 ```
 
