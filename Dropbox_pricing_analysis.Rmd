@@ -6,6 +6,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(scales)
 ```
 
 ```{r}
@@ -18,13 +19,18 @@ dropbox$id <- seq(1, nrow(dropbox),1)
 dropbox <- dropbox %>%
   mutate(tool = ifelse(`Do you use Dropbox as your main cloud storage?` == 'Yes', "Dropbox", `What cloud storage product do you use mostly?`)) %>%
   mutate(tool = ifelse(tool == "I don't use any cloud storage product/ I only use whatever space my compute have.", "computer", tool)) 
+```
 
+# market share
+```{r}
 dropbox%>%
   group_by(tool) %>%
-  tally() %>%
+  tally() %>% 
+  mutate(market_share = percent(n/sum(n))) %>%
   arrange(desc(n)) %>%
-  ggplot(aes(x = reorder(tool, n), y = n)) + geom_col() + coord_flip() +
-  labs(x = "tools", y = "count")
+  ggplot(aes(x = reorder(tool, n), y = n)) + geom_text(aes(label = market_share), hjust = -0.2) + geom_col() + coord_flip() +
+  labs(x = "tools", y = "count", title = "Main tool for cloud storage") +
+  ylim(0, 30)
 ```
 
 ```{r}
