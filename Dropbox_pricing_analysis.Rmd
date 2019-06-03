@@ -11,19 +11,22 @@ library(scales)
 
 ```{r}
 dropbox <- read_csv("Pricing Project - Dropbox (Responses) - Form Responses 1.csv") %>%
-  mutate(id = seq(1, nrow(dropbox),1)) %>%
+  #mutate(id = seq(1, nrow(dropbox),1)) %>%
   mutate(tool = ifelse(`Do you use Dropbox as your main cloud storage?` == 'Yes', "Dropbox", `What cloud storage product do you use mostly?`)) %>%
   mutate(tool = ifelse(tool == "I don't use any cloud storage product/ I only use whatever space my compute have.", "computer", tool)) %>%
   mutate(main_tool = ifelse(tool == "Dropbox" | tool == "computer",  tool, "Others")) %>% 
-  #rename(dropbox_paying = "How much are you paying for your Dropbox services?") %>%
-  #rename(other_paying = "Are you paying for the cloud storage you mentioned above?") %>%
-  # mutate(paying = ifelse(`Do you use Dropbox as your main cloud storage?` == 'Yes', `How much are you paying for your Dropbox services?`, `Are you paying for the cloud storage you mentioned above?`)) %>%
-  # mutate(paying = ifelse(paying == "I am using a free account", "No", paying)) %>%
-  # mutate(paying = ifelse(paying == "$16.58 / month (yearly plan)" | paying == ))
   mutate(paying = ifelse(`How much are you paying for your Dropbox services?` == "I am using a free account" | `Are you paying for the cloud storage you mentioned above?` == "No", "No", NA)) %>%
   mutate(paying = ifelse(tool == "computer", "No", paying)) %>%
-  mutate(paying = ifelse(is.na(paying), "Yes", paying))
+  mutate(paying = ifelse(is.na(paying), "Yes", paying)) %>%
+  mutate(share_usage = ifelse(main_tool == "Dropbox", `With whom do you share Dropbox files?`, `With whom do you share files?` )) %>%
+  mutate(share_usage = ifelse(str_detect(share_usage, regex("all of the above", ignore_case = T)), "All of the above", share_usage)) %>%
+  # mutate(task_usage = ifelse(main_tool == "Dropbox", `Do you use any task management tool? e.g. Trello, Wunderlist, Google Calendar, Airtable, Notion, etc.`, `Do you use any task management tool? e.g. Trello, Wunderlist, Google Calendar, Airtable, Notion, etc._1`))
 ```
+
+```{r}
+colnames(dropbox)
+```
+
 
 # market share
 ```{r}
@@ -40,7 +43,7 @@ dropbox%>%
 ```
 
 ```{r}
-colnames(dropbox)
+
 ```
 
 # proportion of paying for cloud storage
@@ -66,5 +69,49 @@ dropbox %>%
   filter(!str_detect(tool, regex("baidu", ignore_case = T))) %>%
   ggplot(aes(x = tool, y = n, fill = paying)) + geom_col(position = "fill", alpha = 0.6) +
   labs(y = "Percentage of customers", title ="Percentage of customers paying for clould storage service")
+```
+
+```{r}
+# dropbox %>%
+#   group_by(main_to  ol, share_usage) %>%
+#   tally() %>%
+#   filter(main_tool != "computer") %>%
+#   #filter(!str_detect(tool, regex("baidu", ignore_case = T))) %>%
+#   ggplot(aes(x = main_tool, y = n, fill = share_usage)) + geom_col(position = "fill", alpha = 0.6)
+  
+  
+```
+
+
+```{r}
+dropbox %>%
+  filter(`Would you be willing to pay extra money for Dropbox's task management features?` !="No" ) %>%
+  select(`How much are you paying for your Dropbox services?`, `Would you be willing to pay extra money for Dropbox's task management features?`, `By how much are you willing to pay for Dropbox's task management features (in addition to what you are paying for its storage services)?`)
+```
+```{r}
+demand <- dropbox %>%
+  filter(main_tool == "Dropbox") %>%
+  rename(wtp = `By how much are you willing to pay for Dropbox's task management features (in addition to what you are paying for its storage services)?`) %>%
+  select(wtp) %>%
+  mutate(wtp = parse_number(wtp)) %>%
+  group_by(wtp) %>%
+  tally() %>%
+  arrange(desc(wtp)) %>%
+  mutate(qty_demand = cumsum(n)) %>%
+  mutate(extra_profit = wtp * qty_demand) #%>%
+  # select(-n) %>%
+  # gather(type, number, -wtp)
+
+p1 <- demand %>%
+  ggplot(aes(x = wtp, y = qty_demand, color = 'blue')) + geom_point() +  geom_smooth() +
+  theme(legend.position = "none") +
+  labs( x = "price", y = "Quantity Demanded", title = "Demand curve" , subtitle = "for existing Dropbox customers")
+
+p2 <- demand %>%
+  ggplot(aes(x = wtp, y = extra_profit)) + geom_point() +  geom_smooth() +
+  theme(legend.position = "none") +
+  labs( x = "price", y = "Extra Profit", title = "Extra Revenue" , subtitle = "for existing Dropbox customers")
+
+gridExtra::grid.arrange(p1,p2,nrow = 1)
 ```
 
