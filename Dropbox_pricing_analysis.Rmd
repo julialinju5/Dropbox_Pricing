@@ -10,15 +10,19 @@ library(scales)
 ```
 
 ```{r}
-dropbox <- read_csv("Pricing Project - Dropbox (Responses) - Form Responses 1.csv")
-
-dropbox$id <- seq(1, nrow(dropbox),1)
-```
-
-```{r}
-dropbox <- dropbox %>%
+dropbox <- read_csv("Pricing Project - Dropbox (Responses) - Form Responses 1.csv") %>%
+  mutate(id = seq(1, nrow(dropbox),1)) %>%
   mutate(tool = ifelse(`Do you use Dropbox as your main cloud storage?` == 'Yes', "Dropbox", `What cloud storage product do you use mostly?`)) %>%
-  mutate(tool = ifelse(tool == "I don't use any cloud storage product/ I only use whatever space my compute have.", "computer", tool)) 
+  mutate(tool = ifelse(tool == "I don't use any cloud storage product/ I only use whatever space my compute have.", "computer", tool)) %>%
+  mutate(main_tool = ifelse(tool == "Dropbox" | tool == "computer",  tool, "Others")) %>% 
+  #rename(dropbox_paying = "How much are you paying for your Dropbox services?") %>%
+  #rename(other_paying = "Are you paying for the cloud storage you mentioned above?") %>%
+  # mutate(paying = ifelse(`Do you use Dropbox as your main cloud storage?` == 'Yes', `How much are you paying for your Dropbox services?`, `Are you paying for the cloud storage you mentioned above?`)) %>%
+  # mutate(paying = ifelse(paying == "I am using a free account", "No", paying)) %>%
+  # mutate(paying = ifelse(paying == "$16.58 / month (yearly plan)" | paying == ))
+  mutate(paying = ifelse(`How much are you paying for your Dropbox services?` == "I am using a free account" | `Are you paying for the cloud storage you mentioned above?` == "No", "No", NA)) %>%
+  mutate(paying = ifelse(tool == "computer", "No", paying)) %>%
+  mutate(paying = ifelse(is.na(paying), "Yes", paying))
 ```
 
 # market share
@@ -37,5 +41,30 @@ dropbox%>%
 
 ```{r}
 colnames(dropbox)
+```
+
+# proportion of paying for cloud storage
+```{r}
+dropbox %>% 
+  #filter(!is.na(dropbox_paying)) %>%
+  #mutate(dropbox_paying = ifelse(dropbox_paying == "I am using a free account", "No", "Yes")) %>%
+  #group_by(dropbox_paying) %>%
+  group_by(main_tool, paying) %>%
+  tally() %>%
+  filter(main_tool != "computer") %>%
+  ggplot(aes(x = main_tool, y = n, fill = paying)) + geom_col(position = "fill", alpha = 0.8)
+```
+
+```{r}
+dropbox %>% 
+  #filter(!is.na(dropbox_paying)) %>%
+  #mutate(dropbox_paying = ifelse(dropbox_paying == "I am using a free account", "No", "Yes")) %>%
+  #group_by(dropbox_paying) %>%
+  group_by(tool, paying) %>%
+  tally() %>%
+  filter(tool != "computer") %>%
+  filter(!str_detect(tool, regex("baidu", ignore_case = T))) %>%
+  ggplot(aes(x = tool, y = n, fill = paying)) + geom_col(position = "fill", alpha = 0.6) +
+  labs(y = "Percentage of customers", title ="Percentage of customers paying for clould storage service")
 ```
 
