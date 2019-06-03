@@ -1,0 +1,104 @@
+---
+title: "Dropbox_pricing"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(scales)
+```
+
+```{r}
+dropbox <- read_csv("Pricing Project - Dropbox (Responses) - Form Responses 1.csv") %>%
+  mutate(id = seq(1, nrow(dropbox),1)) %>%
+  mutate(tool = ifelse(`Do you use Dropbox as your main cloud storage?` == 'Yes', "Dropbox", `What cloud storage product do you use mostly?`)) %>%
+  mutate(tool = ifelse(tool == "I don't use any cloud storage product/ I only use whatever space my compute have.", "computer", tool)) %>%
+  mutate(main_tool = ifelse(tool == "Dropbox" | tool == "computer",  tool, "Others")) %>% 
+  #rename(dropbox_paying = "How much are you paying for your Dropbox services?") %>%
+  #rename(other_paying = "Are you paying for the cloud storage you mentioned above?") %>%
+  # mutate(paying = ifelse(`Do you use Dropbox as your main cloud storage?` == 'Yes', `How much are you paying for your Dropbox services?`, `Are you paying for the cloud storage you mentioned above?`)) %>%
+  # mutate(paying = ifelse(paying == "I am using a free account", "No", paying)) %>%
+  # mutate(paying = ifelse(paying == "$16.58 / month (yearly plan)" | paying == ))
+  mutate(paying = ifelse(`How much are you paying for your Dropbox services?` == "I am using a free account" | `Are you paying for the cloud storage you mentioned above?` == "No", "No", NA)) %>%
+  mutate(paying = ifelse(tool == "computer", "No", paying)) %>%
+  mutate(paying = ifelse(is.na(paying), "Yes", paying))
+```
+
+# market share
+```{r}
+dropbox%>%
+  group_by(tool) %>%
+  tally() %>% 
+  mutate(market_share = percent(n/sum(n))) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = reorder(tool, n), y = n, group = tool, fill = tool)) + geom_text(aes(label = market_share), hjust = -0.2) + geom_col(alpha = 0.4) + coord_flip() +
+  theme(legend.position = "none") +
+  labs(x = "tools", y = "count", title = "Market Share") + 
+  ylim(0, 30) 
+
+```
+
+```{r}
+colnames(dropbox)
+```
+
+
+
+# Family Plan
+# proportion of not using but willing to shift because of other people using
+```{r}
+toDropbox_forOthers <- dropbox %>% 
+  filter(main_tool != "Dropbox") %>%
+  mutate(move_to_dropbox_for_others = ifelse(`If most of your families/friends/colleagues are using Dropbox to share files to you, are you likely to switch to Dropbox?` == "Yes", "Yes", 
+                                             ifelse(`If most of your families/friends/colleagues are using Dropbox to share files to you, are you likely to switch to Dropbox?` == "Maybe", "Maybe", "No"))) %>%
+  select(move_to_dropbox_for_others) %>%
+  group_by(move_to_dropbox_for_others) %>%
+  summarise(ans_count = n()) %>%
+  ungroup()
+
+toDropbox_forOthers[toDropbox_forOthers$move_to_dropbox_for_others == "No", "ans_count"] <- 
+toDropbox_forOthers[toDropbox_forOthers$move_to_dropbox_for_others == "No", "ans_count"] + toDropbox_forOthers[toDropbox_forOthers$move_to_dropbox_for_others == "Maybe", "ans_count"] *0.5
+
+toDropbox_forOthers[toDropbox_forOthers$move_to_dropbox_for_others == "Yes", "ans_count"] <- 
+toDropbox_forOthers[toDropbox_forOthers$move_to_dropbox_for_others == "Yes", "ans_count"] + toDropbox_forOthers[toDropbox_forOthers$move_to_dropbox_for_others == "Maybe", "ans_count"] *0.5
+
+toDropbox_forOthers <- toDropbox_forOthers[!(toDropbox_forOthers$move_to_dropbox_for_others=="Maybe" ),]
+
+
+toDropbox_forOthers$ans_ratio <- toDropbox_forOthers$ans_count/sum(toDropbox_forOthers$ans_count)
+
+toDropbox_forOthers %>% ggplot(aes(x = move_to_dropbox_for_others, y = ans_ratio, fill = move_to_dropbox_for_others)) + 
+  geom_col(alpha = 0.4) + 
+  geom_text(aes(label = round(ans_ratio, 2)), vjust = -0.2) + 
+  theme(legend.position = "none") +
+  labs(x = "If you are willing to switch to dropbox because other people use Dropbox", y = "Ratio", title = "Willingness to Switch to Dropbox Because of Other People") + 
+  ylim(0, .8) 
+```
+
+
+```{r}
+unique(dropbox$`If most of your families/friends/colleagues are using Dropbox to share files to you, are you likely to switch to Dropbox?`)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
