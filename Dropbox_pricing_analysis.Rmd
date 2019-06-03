@@ -28,9 +28,11 @@ dropbox%>%
   tally() %>% 
   mutate(market_share = percent(n/sum(n))) %>%
   arrange(desc(n)) %>%
-  ggplot(aes(x = reorder(tool, n), y = n)) + geom_text(aes(label = market_share), hjust = -0.2) + geom_col() + coord_flip() +
-  labs(x = "tools", y = "count", title = "Main tool for cloud storage") +
-  ylim(0, 30)
+  ggplot(aes(x = reorder(tool, n), y = n, group = tool, fill = tool)) + geom_text(aes(label = market_share), hjust = -0.2) + geom_col(alpha = 0.4) + coord_flip() +
+  theme(legend.position = "none") +
+  labs(x = "tools", y = "count", title = "Market Share") + 
+  ylim(0, 30) 
+
 ```
 
 ```{r}
