@@ -121,7 +121,7 @@ gridExtra::grid.arrange(p1,p2,nrow = 1)
 500000000/27 * 25
 ```
 
-```{r}
+```{r height = 1080p, width = 1080p}
 dropbox %>%
   filter(!is.na(`If Dropbox develops features for task management (e.g. To do list, calendar), are you willing to switch to Dropbox?`)) %>%
   group_by(`If Dropbox develops features for task management (e.g. To do list, calendar), are you willing to switch to Dropbox?`) %>%
@@ -130,8 +130,12 @@ dropbox %>%
   rename(willing_to_switch_task = `If Dropbox develops features for task management (e.g. To do list, calendar), are you willing to switch to Dropbox?`) %>%
   filter(willing_to_switch_task != "Maybe") %>%
   mutate(perc = nr_customer/sum(nr_customer)) %>%
-  ggplot(aes(x = willing_to_switch_task, y = perc, fill = willing_to_switch_task)) + geom_col() + labs(y = "Ratio", x = "If you are willing to switch to Dropbox for task management features", title = "Willing to switch to Dropbox for task management features") +
-  theme(legend.position = "none")
+  ggplot(aes(x = willing_to_switch_task, y = perc, fill = willing_to_switch_task)) + geom_col() + 
+  labs(y = "Ratio", 
+       x = "If you are willing to switch to Dropbox for task management features", 
+       title = "Willing to switch to Dropbox for task management features") +
+  theme(legend.position = "none") +
+  geom_text(aes(label = round(perc, 2)), vjust = -0.2)
   
 
 ```
