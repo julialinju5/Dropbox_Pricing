@@ -103,15 +103,36 @@ demand <- dropbox %>%
   # gather(type, number, -wtp)
 
 p1 <- demand %>%
-  ggplot(aes(x = wtp, y = qty_demand, color = 'blue')) + geom_point() +  geom_smooth() +
+  ggplot(aes(x = wtp, y = qty_demand)) + geom_point() +  
+  geom_smooth(color = 'light blue', size = 1) +
   theme(legend.position = "none") +
-  labs( x = "price", y = "Quantity Demanded", title = "Demand curve" , subtitle = "for existing Dropbox customers")
+  labs( x = "price", y = "Quantity Demanded", title = "Demand Curve" , subtitle = "for existing Dropbox customers")
 
 p2 <- demand %>%
-  ggplot(aes(x = wtp, y = extra_profit)) + geom_point() +  geom_smooth() +
+  ggplot(aes(x = wtp, y = extra_profit)) + geom_point() +  
+  geom_smooth(color = 'pink', size = 1) +
   theme(legend.position = "none") +
   labs( x = "price", y = "Extra Profit", title = "Extra Revenue" , subtitle = "for existing Dropbox customers")
 
 gridExtra::grid.arrange(p1,p2,nrow = 1)
+```
+
+```{r}
+500000000/27 * 25
+```
+
+```{r}
+dropbox %>%
+  filter(!is.na(`If Dropbox develops features for task management (e.g. To do list, calendar), are you willing to switch to Dropbox?`)) %>%
+  group_by(`If Dropbox develops features for task management (e.g. To do list, calendar), are you willing to switch to Dropbox?`) %>%
+  tally() %>%
+  mutate(nr_customer = n + 21/2) %>%
+  rename(willing_to_switch_task = `If Dropbox develops features for task management (e.g. To do list, calendar), are you willing to switch to Dropbox?`) %>%
+  filter(willing_to_switch_task != "Maybe") %>%
+  mutate(perc = nr_customer/sum(nr_customer)) %>%
+  ggplot(aes(x = willing_to_switch_task, y = perc, fill = willing_to_switch_task)) + geom_col() + labs(y = "Ratio", x = "If you are willing to switch to Dropbox for task management features", title = "Willing to switch to Dropbox for task management features") +
+  theme(legend.position = "none")
+  
+
 ```
 
