@@ -67,7 +67,7 @@ dropbox %>%
   tally() %>%
   filter(tool != "computer") %>%
   filter(!str_detect(tool, regex("baidu", ignore_case = T))) %>%
-  ggplot(aes(x = tool, y = n, fill = paying)) + geom_col(position = "fill", alpha = 0.6) +
+  ggplot(aes(x = tool, y = n, fill = paying)) + geom_col(position = "fill") +
   labs(y = "Percentage of customers", title ="Percentage of customers paying for clould storage service")
 ```
 
@@ -139,4 +139,13 @@ dropbox %>%
   
 
 ```
+```{r}
+2.5 *0.583 + 7.5 * 0.125
+```
+
+```{r}
+500 *0.35
+175  * 0.01 * 2.4 * 0.7
+```
+
 
